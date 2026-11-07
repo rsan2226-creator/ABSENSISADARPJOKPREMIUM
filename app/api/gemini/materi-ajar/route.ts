@@ -24,23 +24,23 @@ export async function POST(req: NextRequest) {
     }
 
     const systemInstruction = `
-      Anda adalah seorang guru profesional dan pengembang kurikulum yang ahli dalam menyusun Bahan Ajar / Materi Ajar yang interaktif, menyenangkan, sistematis, dan mudah dipahami siswa sesuai Kurikulum Merdeka.
-      Anda harus menghasilkan dokumen materi ajar utuh dan menyertakan tabel ringkasan konsep/fakta/prosedur yang sangat rapi dan menarik.
-      Gaya bahasa harus komunikatif, sesuai dengan jenjang usia peserta didik, serta mendukung pembelajaran aktif, kontekstual, dan menyenangkan.
+      Anda adalah seorang guru PJOK profesional dan penyusun Buku Panduan Guru & Buku Siswa PJOK di Sistem Informasi Perbukuan Indonesia (SIBI) Pusat Perbukuan BSKAP Kemendikbudristek.
+      Tugas Anda adalah menyusun Bahan Ajar / Materi Ajar PJOK yang mengacu penuh pada Buku Panduan Guru PJOK SIBI (4 Elemen CP: Keterampilan Gerak, Pengetahuan Gerak, Pemanfaatan Gerak, Pengembangan Karakter/Nilai Gerak; serta tahapan Sikap Awalan, Sikap Pelaksanaan, Sikap Akhir, dan Permainan Peraturan Dimodifikasi).
+      Anda harus menghasilkan dokumen materi ajar utuh dan menyertakan tabel ringkasan konsep/fakta/prosedur gerak yang sangat rapi dan menarik.
     `;
 
     let userPrompt = "";
     if (promptVersion === "versi1") {
       userPrompt = `
-        Anda adalah seorang Guru ${mapel || "PJOK"}, ${jenjang || "SD"}, ${kelas || "Kelas 5"}, ${fase || "Fase C"}.
+        Anda adalah seorang Guru ${mapel || "PJOK"}, ${jenjang || "SD"}, ${kelas || "Kelas 5"}, ${fase || "Fase C"} yang menggunakan acuan resmi Buku Panduan Guru PJOK dari SIBI (Sistem Informasi Perbukuan Indonesia - Kemendikbudristek).
         Buatkan materi ajar lengkap dengan topik "${topik}" dan mengacu pada tujuan pembelajaran "${tujuan}".
         Materi ajar harus sesuai dengan level kognitif "${levelBloom || "C3 - Menerapkan"}" dan mendukung pengembangan dimensi "${dimensiProfil || "Mandiri, Gotong Royong"}".
 
-        Materi ajar harus ditulis secara utuh, mencakup:
+        Materi ajar harus ditulis secara utuh sesuai standar Buku PJOK SIBI, mencakup:
         1. Judul dan Tujuan Pembelajaran di bagian awal.
-        2. Pendahuluan atau Apersepsi: paragraf pembuka yang menghubungkan materi dengan kehidupan nyata siswa atau pengetahuan sebelumnya.
-        3. Isi Materi: jelaskan secara sistematis konsep utama, fakta, prosedur, atau prinsip yang perlu dipahami siswa. Sertakan contoh konkret, ilustrasi, atau analogi.
-        4. Tabel Ringkasan Materi: Buat tabel terstruktur yang memetakan No, Sub-Konsep, Fakta Penting, Prosedur/Langkah Kegiatan, dan Contoh Analogi Konkret.
+        2. Pendahuluan atau Apersepsi: paragraf pembuka yang menghubungkan materi dengan kehidupan nyata siswa serta pemanasan permainan (warming-up game).
+        3. Isi Materi: jelaskan secara sistematis Fakta, Konsep, dan Prosedur Gerak (Sikap Awal, Sikap Pelaksanaan, Sikap Akhir) serta Aktivitas Pembelajaran 1, 2, dan 3 (Permainan Dimodifikasi) sesuai Buku Panduan PJOK SIBI.
+        4. Tabel Ringkasan Materi: Buat tabel terstruktur yang memetakan No, Sub-Konsep, Fakta Penting, Prosedur/Langkah Kegiatan (Sikap Awal - Pelaksanaan - Akhir), dan Contoh Analogi Konkret.
 
         Format respon wajib berupa JSON dengan struktur berikut:
         {
@@ -62,13 +62,13 @@ export async function POST(req: NextRequest) {
       `;
     } else {
       userPrompt = `
-        Anda adalah seorang Guru ${mapel || "PJOK"}, ${jenjang || "SD"}, ${kelas || "Kelas 5"}, ${fase || "Fase C"}.
+        Anda adalah seorang Guru ${mapel || "PJOK"}, ${jenjang || "SD"}, ${kelas || "Kelas 5"}, ${fase || "Fase C"} yang menggunakan acuan resmi Buku Panduan Guru PJOK dari SIBI (Sistem Informasi Perbukuan Indonesia - Kemendikbudristek).
         Buatkan materi ajar lengkap dengan topik "${topik}" dan mengacu pada tujuan pembelajaran "${tujuan}".
 
-        Materi ajar harus ditulis secara utuh, mencakup:
+        Materi ajar harus ditulis secara utuh sesuai standar Buku PJOK SIBI, mencakup:
         1. Judul dan Tujuan Pembelajaran di bagian awal.
-        2. Pendahuluan atau Apersepsi: paragraf pembuka yang menghubungkan materi dengan kehidupan nyata siswa atau pengetahuan sebelumnya.
-        3. Isi Materi: jelaskan secara sistematis konsep utama, fakta, prosedur, atau prinsip yang perlu dipahami siswa. Sertakan contoh konkret, ilustrasi, atau analogi.
+        2. Pendahuluan atau Apersepsi: paragraf pembuka yang menghubungkan materi dengan kehidupan nyata siswa.
+        3. Isi Materi: jelaskan secara sistematis Fakta, Konsep, dan Prosedur Gerak (Sikap Awalan, Sikap Pelaksanaan, Sikap Akhir) serta Aktivitas Pembelajaran 1-3 sesuai Buku Panduan PJOK SIBI.
         4. Tabel Ringkasan Materi: Buat tabel terstruktur yang memetakan No, Sub-Konsep, Fakta Penting, Prosedur/Langkah Kegiatan, dan Contoh Analogi Konkret.
 
         Format respon wajib berupa JSON dengan struktur berikut:
@@ -92,34 +92,34 @@ export async function POST(req: NextRequest) {
     }
 
     const fallbackGenerator = () => ({
-      judul: `Bahan Ajar Eksploratif: ${topik}`,
-      tujuanPembelajaran: tujuan || `Peserta didik dapat memahami konsep dasar dan mempraktikkan keterampilan ${topik} secara mandiri dan percaya diri.`,
-      apersepsi: `Pernahkah kalian mengamati bagaimana atlet atau teman bermain bergerak dengan lincah dan bugar? Hari ini kita akan menjelajahi rahasia di balik keterampilan ${topik} yang membuat tubuh kita semakin sehat, kuat, dan berenergi!`,
-      isiMateriUtama: `Pendidikan Jasmani dan Olahraga mengajak kita mengembangkan koordinasi motorik, keseimbangan, serta kebiasaan hidup bugar. Pada pembelajaran "${topik}", terdapat tiga pilar penting yang harus kita kuasai: (1) Posisi dan Keseimbangan Tubuh, (2) Koordinasi Pola Gerak Spesifik, dan (3) Kebugaran serta Keselamatan Diri. Ketika melakukan gerakan ini, selalu mulai dari pemanasan yang cukup, perhatikan ritme pernapasan, dan utamakan keselamatan diri serta teman.`,
+      judul: `Bahan Ajar PJOK (Standar Buku SIBI Kemendikbudristek): ${topik}`,
+      tujuanPembelajaran: tujuan || `Peserta didik mampu memahami fakta, konsep, dan prosedur serta mempraktikkan keterampilan gerak ${topik} secara mandiri, sportif, dan bekerja sama sesuai Buku Panduan PJOK SIBI.`,
+      apersepsi: `Berdasarkan Buku Panduan PJOK SIBI Kemendikbudristek, aktivitas jasmani pada materi "${topik}" membantu kita mengembangkan keterampilan gerak, kebugaran jasmani, dan karakter sportivitas (fair play). Sebelum memulai Aktivitas Pembelajaran 1, mari kita lakukan pemanasan dalam bentuk permainan ceria!`,
+      isiMateriUtama: `Mengacu pada Buku Panduan Guru PJOK (SIBI - Pusat Perbukuan BSKAP Kemendikbudristek), pembelajaran "${topik}" mengintegrasikan 4 Elemen Capaian Pembelajaran: (1) Pengetahuan Gerak, yaitu memahami prosedur Sikap Awalan, Sikap Pelaksanaan, dan Sikap Akhir; (2) Keterampilan Gerak, yaitu mempraktikkan gerak secara perorangan/berpasangan (Aktivitas 1), kombinasi gerak (Aktivitas 2), dan bermain dengan peraturan yang dimodifikasi (Aktivitas 3); (3) Pemanfaatan Gerak untuk kesehatan dan kebugaran; serta (4) Pengembangan Karakter Mandiri dan Gotong Royong.`,
       tabelMateri: [
         {
           no: 1,
-          subKonsep: "Sikap Awalan & Posisi Tubuh",
-          faktaPenting: "Tumpuan kaki yang stabil mencegah kehilangan keseimbangan.",
-          prosedur: "Berdiri tegak, buka kaki selebar bahu, tekuk sedikit lutut, dan fokuskan pandangan ke depan.",
-          analogi: "Seperti pondasi pohon beringin yang kokoh menancap di tanah."
+          subKonsep: "Sikap Awalan (Persiapan Gerak - Standar SIBI)",
+          faktaPenting: "Tumpuan kaki yang stabil dan pandangan terfokus menjadi kunci keberhasilan gerak awal.",
+          prosedur: "Berdiri tegak menghadap arah gerakan, buka kaki selebar bahu, tekuk sedikit kedua lutut, dan rilekskan bahu.",
+          analogi: "Seperti kuda-kuda kokoh yang siap melangkah dengan seimbang."
         },
         {
           no: 2,
-          subKonsep: "Pelaksanaan Gerak Inti",
-          faktaPenting: "Kombinasi ayunan tangan dan langkah kaki meningkatkan kelincahan.",
-          prosedur: "Lakukan gerakan secara berirama, jaga kelenturan persendian, dan hembuskan napas teratur.",
-          analogi: "Seperti pegas elastis yang memantul dengan presisi dan mulus."
+          subKonsep: "Sikap Pelaksanaan (Aktivitas Pembelajaran 1 & 2 SIBI)",
+          faktaPenting: "Koordinasi ayunan lengan, langkah kaki, dan pemindahan berat badan meningkatkan akurasi gerak.",
+          prosedur: "Lakukan gerakan inti secara berirama dari latihan individual, berpasangan, hingga kombinasi gerak melewati rintangan cone.",
+          analogi: "Seperti pegas elastis yang bergerak selaras dan terarah ke sasaran."
         },
         {
           no: 3,
-          subKonsep: "Sikap Akhir & Relaksasi",
-          faktaPenting: "Pendinginan membantu pemulihan denyut jantung kembali normal.",
-          prosedur: "Hentikan gerakan secara bertahap, lakukan peregangan statis, dan tarik napas dalam-dalam.",
-          analogi: "Seperti mobil yang menurunkan kecepatan secara halus hingga berhenti aman di garasi."
+          subKonsep: "Sikap Akhir & Permainan Modifikasi (Aktivitas 3 SIBI)",
+          faktaPenting: "Gerak lanjutan (follow-through) menjaga keseimbangan tubuh dan mencegah cedera.",
+          prosedur: "Jaga keseimbangan setelah melakukan gerakan, terapkan dalam permainan peraturan dimodifikasi secara sportif, dan akhiri dengan pendinginan.",
+          analogi: "Seperti pesawat yang mendarat mulus dan seimbang di landasan."
         }
       ],
-      kesimpulanDanAktivitas: `Kuasai teknik dasar ${topik} dengan disiplin berlatih. Tantangan pekan ini: Praktikkan variasi gerak ini selama 10-15 menit di rumah bersama keluarga atau teman bermainmu!`
+      kesimpulanDanAktivitas: `Referensi Resmi: Buku Panduan Guru PJOK SD/MI (SIBI Kemendikbudristek). Kuasai tahapan Sikap Awal, Pelaksanaan, dan Sikap Akhir pada materi ${topik}, lalu isilah lembar refleksi penguasaan gerak (Sangat Menguasai / Menguasai / Belum Menguasai)!`
     });
 
     const response = await generateContentWithFallback({

@@ -1,6 +1,7 @@
 import { Type } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 import { generateContentWithFallback, extractJson } from "@/lib/gemini";
+import { getSibiBookByGrade } from "@/lib/sibi-pjok-data";
 
 export async function POST(req: NextRequest) {
   let reqBody: any = {};
@@ -11,112 +12,108 @@ export async function POST(req: NextRequest) {
   }
 
   const grade = reqBody.grade || "IV";
-  const material = (reqBody.material || "Permainan Bola Kasti: Melempar dan Menangkap").trim();
-  const duration = (reqBody.duration || "2 x 35 Menit (1 Pertemuan)").trim();
+  const material = (reqBody.material || "Unit 3 SIBI: Variasi & Kombinasi Gerak Dasar Permainan Lapangan (Bola Kasti)").trim();
+  const duration = (reqBody.duration || "3 x 35 Menit (1 Pertemuan / 3 JP Standar SIBI)").trim();
   const teachingModel = (reqBody.teachingModel || "Cooperative Learning").trim();
 
-  const faseLabel =
-    grade === "I" || grade === "II"
-      ? "Fase A (Kelas I-II SD)"
-      : grade === "III" || grade === "IV"
-      ? "Fase B (Kelas III-IV SD)"
-      : "Fase C (Kelas V-VI SD)";
+  const sibiBook = getSibiBookByGrade(grade);
+  const faseLabel = `${sibiBook.fase} (${sibiBook.kelasLabel})`;
 
   const buildFallbackModul = () => {
     const modelSyntaxSteps: Record<string, string[]> = {
       "Cooperative Learning": [
-        `Fase 1 (Penyampaian Tujuan & Motivasi): Guru mendemonstrasikan teknik dasar ${material} dan menjelaskan tantangan kelompok yang akan diselesaikan bersama.`,
-        `Fase 2 (Pembagian Tim Heterogen): Siswa dibagi menjadi kelompok kecil (4-5 anak) secara adil untuk berlatih variasi gerakan ${material} secara bergantian.`,
-        `Fase 3 (Bimbingan Kerja Tim): Setiap anggota kelompok saling mengamati dan membantu memperbaiki posisi tubuh teman saat mempraktikkan ${material} dengan supervisi guru.`,
-        `Fase 4 (Permainan Kooperatif & Evaluasi): Kelompok mempraktikkan mini-game ${material} dengan aturan modifikasi yang menekankan kerja sama dan sportivitas.`,
-        `Fase 5 (Penghargaan Kelompok): Guru memberikan apresiasi bintang sportivitas bagi tim yang paling kompak, disiplin, dan saling mendukung.`
+        `Aktivitas Pembelajaran 1 - Eksplorasi Gerak Dasar (Standar Buku Panduan PJOK SIBI): Guru mendemonstrasikan fakta, konsep, dan prosedur gerak pada materi ${material}; peserta didik mengamati dan mencoba gerakan dasar secara perorangan/berpasangan.`,
+        `Aktivitas Pembelajaran 2 - Variasi & Kombinasi Gerak Berkelompok: Siswa dibagi menjadi kelompok heterogen (4-5 anak) untuk mempraktikkan variasi dan kombinasi keterampilan gerak ${material} secara bergantian sambil saling memberikan umpan balik korektif.`,
+        `Aktivitas Pembelajaran 3 - Penerapan dalam Permainan Peraturan Dimodifikasi (SIBI): Kelompok mempraktikkan permainan sederhana/modifikasi ${material} yang menekankan kerja sama, sportivitas (fair play), dan tanggung jawab sosial.`,
+        `Pembelajaran Alternatif & Diferensiasi (SIBI): Bagi peserta didik yang membutuhkan adaptasi motorik, jarak dan alat dimodifikasi (bola karet/spons); bagi yang sudah mahir diberikan tantangan kombinasi gerak lanjutan.`
       ],
       "Inquiry / Discovery Learning": [
-        `Fase 1 (Stimulasi / Rangsangan Gerak): Guru menampilkan peragaan gerakan ${material} dan mengajukan pertanyaan pemantik: "Bagaimana posisi tubuh agar gerakan lebih stabil dan akurat?"`,
-        `Fase 2 (Identifikasi Masalah): Siswa berdiskusi singkat dan mencoba berbagai cara melakukan gerakan ${material} secara mandiri maupun berpasangan.`,
-        `Fase 3 (Pengumpulan Pengalaman Gerak): Siswa mengeksplorasi variasi gerak ${material} pada beberapa pos latihan bertahap di lapangan.`,
-        `Fase 4 (Pembuktian & Praktik Terbimbing): Siswa membandingkan cara gerak yang paling efektif dan menerapkannya dalam tantangan permainan ${material}.`,
-        `Fase 5 (Menarik Kesimpulan): Siswa bersama guru menyimpulkan kunci keberhasilan teknik gerak ${material} yang aman dan benar.`
+        `Aktivitas Pembelajaran 1 - Stimulasi & Identifikasi Gerak (Buku Panduan PJOK SIBI): Guru memperagakan gerakan ${material} dan mengajukan pertanyaan pemantik: "Bagaimana posisi tumpuan kaki dan ayunan tubuh agar gerakan lebih stabil, akurat, dan aman?"`,
+        `Aktivitas Pembelajaran 2 - Pengumpulan Pengalaman Gerak & Pembuktian: Siswa mengeksplorasi variasi gerak ${material} pada pos latihan bertahap sesuai Buku Siswa PJOK SIBI dan membandingkan teknik yang paling efektif.`,
+        `Aktivitas Pembelajaran 3 - Permainan Modifikasi & Kesimpulan (SIBI): Siswa menerapkan teknik gerak terbaik dalam permainan modifikasi ${material} serta menyimpulkan prosedur gerak yang benar bersama guru.`
       ],
       "Direct Instruction": [
-        `Fase 1 (Orientasi & Demonstrasi Guru): Guru memperagakan tahapan teknik ${material} (sikap awal, gerakan inti, dan sikap akhir) secara jelas dan perlahan.`,
-        `Fase 2 (Praktik Terstruktur): Siswa berbaris rapi dan menirukan gerakan ${material} langkah demi langkah sesuai aba-aba peluit guru.`,
-        `Fase 3 (Praktik Terbimbing Berpasangan): Siswa melakukan drill gerakan ${material} secara berpasangan sementara guru berkeliling memberikan koreksi postur secara langsung.`,
-        `Fase 4 (Uji Keterampilan Mandiri): Siswa menerapkan gerakan ${material} dalam rintangan atau permainan aplikatif di lapangan.`
+        `Aktivitas Pembelajaran 1 - Orientasi & Peragaan Prosedur Gerak (Buku Panduan PJOK SIBI): Guru memperagakan tahapan teknik ${material} (Sikap Awalan, Sikap Pelaksanaan, dan Sikap Akhir) secara bertahap dan jelas.`,
+        `Aktivitas Pembelajaran 2 - Praktik Terbimbing Berpasangan: Siswa mempraktikkan variasi dan kombinasi gerakan ${material} sesuai aba-aba peluit sementara guru berkeliling melakukan koreksi postur.`,
+        `Aktivitas Pembelajaran 3 - Permainan Aplikatif Modifikasi (SIBI): Siswa menerapkan keterampilan ${material} dalam permainan dengan peraturan yang dimodifikasi sesuai Buku Panduan Guru PJOK SIBI.`
       ],
       "Project Based Learning": [
-        `Fase 1 (Pertanyaan Mendasar): Guru mengajak siswa mengamati tantangan gerak dalam ${material} dan merancang rangkaian latihan kelompok.`,
-        `Fase 2 (Menyusun Rencana Aktivitas): Setiap kelompok menyusun kombinasi gerakan atau strategi permainan ${material} menggunakan alat yang tersedia.`,
-        `Fase 3 (Latihan & Uji Coba Lapangan): Kelompok berlatih mempraktikkan rangkaian gerak ${material} sambil mencatat kemajuan setiap anggota.`,
-        `Fase 4 (Unjuk Karya Gerak): Setiap kelompok menampilkan demonstrasi rangkaian gerak/permainan ${material} di depan kelas dan menerima umpan balik positif.`
+        `Aktivitas Pembelajaran 1 - Pertanyaan Mendasar & Perencanaan Gerak (SIBI): Siswa mengamati tantangan keterampilan dalam ${material} mengacu pada Buku Panduan PJOK SIBI dan merancang rangkaian latihan kelompok.`,
+        `Aktivitas Pembelajaran 2 - Latihan Terstruktur & Uji Coba Lapangan: Setiap kelompok berlatih menyusun kombinasi gerak atau taktik permainan ${material} menggunakan sarana olahraga/modifikasi.`,
+        `Aktivitas Pembelajaran 3 - Unjuk Karya Gerak & Evaluasi (SIBI): Kelompok mendemonstrasikan rangkaian gerak/permainan ${material} di lapangan dan melakukan evaluasi proses gerak.`
       ],
       "Playful Movement": [
-        `Fase 1 (Permainan Pemanasan Tematik): Guru membuka kegiatan dengan permainan kejar-tangkap ceria yang mengaktifkan gerak dasar menuju materi ${material}.`,
-        `Fase 2 (Pos Petualangan Gerak): Siswa melewati 3 pos tantangan bermain sambil belajar teknik dasar ${material} secara menyenangkan.`,
-        `Fase 3 ( festival Mini-Game ${material}): Siswa bermain dalam pertandingan persahabatan dengan aturan ramah anak yang memastikan semua siswa aktif bergerak.`,
-        `Fase 4 (Selebrasi & Apresiasi): Siswa saling melakukan tos sportivitas dan menceritakan bagian permainan yang paling seru.`
+        `Aktivitas Pembelajaran 1 - Eksplorasi Gerak Ceria (Buku Panduan PJOK SIBI): Siswa mencoba gerakan dasar ${material} melalui aktivitas menirukan dan tantangan berpasangan.`,
+        `Aktivitas Pembelajaran 2 - Pos Petualangan Variasi Gerak: Siswa melewati 3 pos latihan variasi dan kombinasi gerak ${material} secara bergembira.`,
+        `Aktivitas Pembelajaran 3 - Festival Permainan Modifikasi (SIBI): Siswa bermain dalam pertandingan persahabatan ${material} dengan aturan ramah anak yang memastikan seluruh siswa aktif bergerak.`
       ]
     };
 
     const intiSteps = modelSyntaxSteps[teachingModel] || modelSyntaxSteps["Cooperative Learning"];
 
     return {
-      judul: `Modul Ajar PJOK: ${material} (Kelas ${grade} SD - ${faseLabel})`,
+      judul: `Modul Ajar PJOK (Standar SIBI): ${material} — ${sibiBook.kelasLabel} (${sibiBook.fase})`,
       alokasiWaktu: duration,
       sarana: [
-        "Lapangan sekolah / ruang terbuka yang rata, bersih, dan bebas benda tajam",
-        "Peluit guru, stopwatch digital, dan papan klip daftar hadir",
-        `Peralatan utama pembelajaran: ${material} (termasuk modifikasi alat ramah anak SD)`,
-        "Cone / kerucut penanda batas area gerak (10-12 buah) & kotak P3K standar"
+        `Sumber Utama: ${sibiBook.bookTitle} (${sibiBook.authors}, ISBN ${sibiBook.isbn}, ${sibiBook.publisher})`,
+        "Lapangan sekolah / ruang terbuka yang rata, bersih, dan aman",
+        "Peluit guru, stopwatch digital, dan Lembar Amatan Proses Gerak SIBI",
+        `Peralatan utama & modifikasi ramah anak: ${material} (bola karet/spons, cone penanda/botol plastik, matras, dan kotak P3K)`
       ],
       tujuanPembelajaran: [
-        `Peserta didik (${faseLabel}) mampu menjelaskan prosedur dan tahapan gerak dasar pada materi ${material} dengan bahasa sendiri secara tepat.`,
-        `Peserta didik mampu mempraktikkan variasi dan kombinasi keterampilan gerak ${material} secara terkontrol, aman, dan percaya diri.`,
-        `Peserta didik mampu menerapkan nilai sportivitas, kejujuran, kerja sama, dan kepedulian terhadap keselamatan teman selama aktivitas pembelajaran ${material}.`
+        `[Elemen Pengetahuan Gerak - SIBI] Peserta didik (${faseLabel}) mampu menjelaskan fakta, konsep, dan prosedur tahapan gerak (sikap awal, pelaksanaan, sikap akhir) pada materi ${material} dengan benar.`,
+        `[Elemen Keterampilan Gerak - SIBI] Peserta didik mampu mempraktikkan variasi dan kombinasi pola gerak pada materi ${material} dalam aktivitas latihan maupun permainan dengan peraturan yang dimodifikasi.`,
+        `[Elemen Pengembangan Karakter & Nilai Gerak - SIBI] Peserta didik mampu menunjukkan tanggung jawab personal (mandiri, jujur, disiplin) dan tanggung jawab sosial (kerja sama, peduli, sportivitas/fair play) selama pembelajaran.`
       ],
-      kompetensiAwal: `Peserta didik Kelas ${grade} SD telah mengenal gerak dasar lokomotor, non-lokomotor, dan manipulatif sederhana serta memahami aturan dasar keselamatan di lapangan sebelum mempelajari ${material}.`,
+      kompetensiAwal: `Berdasarkan skema ${sibiBook.bookTitle} (SIBI Kemendikbudristek), peserta didik ${sibiBook.kelasLabel} telah mengenal pola gerak dasar fundamental serta memahami aturan keselamatan berolahraga sebelum mempelajari ${material}.`,
       profilPancasila: [
-        "Mandiri (Regulasi diri dan percaya diri saat mencoba keterampilan gerak baru)",
-        "Gotong Royong (Kolaborasi dan kepedulian dalam aktivitas berpasangan/berkelompok)",
-        "Bernalar Kritis (Mengevaluasi posisi tubuh dan cara melakukan gerakan yang efektif)"
+        "Mandiri (Tanggung jawab personal, regulasi diri, dan percaya diri saat mempraktikkan gerak)",
+        "Gotong Royong (Tanggung jawab sosial, kolaborasi, dan kepedulian dalam aktivitas berpasangan/berkelompok)",
+        "Bernalar Kritis (Menganalisis prosedur gerak yang efektif sesuai Buku Panduan PJOK SIBI)"
       ],
       kegiatan: {
         pendahuluan: [
-          "Guru membariskan peserta didik dalam formasi setengah lingkaran, memberi salam, memimpin doa bersama, dan memeriksa kehadiran serta kondisi kesehatan siswa.",
-          `Guru melakukan apersepsi dengan mengaitkan materi ${material} dengan aktivitas sehari-hari siswa serta menyampaikan tujuan pembelajaran hari ini.`,
-          "Guru memimpin pemanasan statis, dinamis, dilanjutkan permainan pemanasan ceria (fun warm-up game) selama 5-7 menit untuk menaikkan suhu tubuh secara bertahap."
+          "Persiapan & Baris-Berbaris (15 Menit - Standar SIBI): Guru membariskan peserta didik dalam formasi setengah lingkaran/bersaf, memberi salam, memimpin doa, memeriksa kehadiran, dan memastikan seluruh siswa dalam kondisi sehat.",
+          `Apersepsi & Pemantik: Guru mengaitkan materi ${material} dengan pengalaman gerak sehari-hari siswa serta menyampaikan Tujuan Pembelajaran dan Kriteria Ketercapaian Tujuan Pembelajaran (KKTP) sesuai Buku Panduan Guru PJOK SIBI.`,
+          "Pemanasan Bermain (Warming-Up Game SIBI): Guru memimpin peregangan statis-dinamis dilanjutkan permainan pemanasan ceria yang mengarah pada otot-otot utama materi pembelajaran."
         ],
         inti: intiSteps,
         penutup: [
-          "Peserta didik melakukan gerakan pendinginan (cooling down) dan peregangan otot secara berpasangan diiringi pengaturan napas.",
-          `Guru dan siswa melakukan sesi refleksi interaktif mengenai pengalaman mempraktikkan ${material}, kesulitan yang dihadapi, dan cara mengatasinya.`,
-          "Guru memberikan apresiasi atas usaha seluruh siswa, menyampaikan materi pertemuan berikutnya, merapikan alat bersama-sama, dan menutup pelajaran dengan doa."
+          "Pendinginan (Cooling Down - 10 Menit Standar SIBI): Peserta didik melakukan gerakan pendinginan dan peregangan otot diiringi pengaturan napas.",
+          `Refleksi Guru & Peserta Didik (Format SIBI): Siswa mengisi/menyampaikan refleksi penguasaan materi ${material} (Kategori: Sangat Menguasai / Menguasai / Belum Menguasai) serta menceritakan nilai sportivitas yang dipelajari.`,
+          "Tindak Lanjut & Doa: Guru memberikan apresiasi, menginformasikan materi unit berikutnya dari Buku PJOK SIBI, menutup dengan doa, dan mengarahkan siswa merapikan alat secara bergotong royong."
         ]
       },
       asesmen: {
-        sikap: "Observasi langsung menggunakan jurnal sikap Profil Pelajar Pancasila (keaktifan, disiplin, kerja sama, dan sportivitas selama kegiatan).",
-        pengetahuan: `Tanya jawab lisan dan kuis singkat mengenai tahapan gerak yang benar serta aturan keselamatan pada materi ${material}.`,
-        keterampilan: `Unjuk kerja / tes praktik gerak ${material} menggunakan rubrik penilaian 3 kriteria: Sikap Awalan (30%), Pelaksanaan Gerak Inti (40%), dan Sikap Akhir / Koordinasi (30%).`
+        sikap: "Asesmen Sikap (Format Buku Panduan Guru PJOK SIBI): Observasi perilaku Pengembangan Karakter & Internalisasi Nilai-Nilai Gerak (kemandirian, kejujuran, kerja sama, dan sportivitas/fair play).",
+        pengetahuan: `Asesmen Pengetahuan (Format SIBI): Tes tulis/lisan (Pilihan Ganda & Uraian) mengenai konsep dan prosedur tahapan gerak (Sikap Awal, Pelaksanaan, Sikap Akhir) pada materi ${material}.`,
+        keterampilan: `Asesmen Keterampilan Proses & Produk Gerak (Format SIBI): Penilaian unjuk kerja praktik ${material} menggunakan rubrik 3 komponen Buku Panduan PJOK SIBI: (1) Sikap Awalan (Skor 1-3), (2) Sikap Pelaksanaan Gerak (Skor 1-4), dan (3) Sikap Akhir/Follow-Through (Skor 1-3), dikonversi ke skala 100.`
       },
-      tipsGuru: `Pastikan seluruh siswa terhidrasi dengan baik sebelum dan sesudah aktivitas. Gunakan alat peraga modifikasi (misalnya bola karet/spons atau jarak yang disesuaikan) bagi siswa Kelas ${grade} yang masih membutuhkan adaptasi motorik.`
+      tipsGuru: `Pedoman Pembelajaran Alternatif & Pengayaan/Remedial (Buku Panduan Guru PJOK SIBI ${sibiBook.kelasLabel}): Jika sarana atau cuaca kurang mendukung, modifikasi aturan permainan, perkecil ukuran lapangan, dan gunakan alat modifikasi yang aman. Berikan remedial pendampingan bertahap bagi siswa yang belum mencapai KKTP.`
     };
   };
 
   try {
     const prompt = `
-      Buatlah Modul Ajar (RPP) Kurikulum Merdeka Pendidikan Jasmani, Olahraga, dan Kesehatan (PJOK) tingkat Sekolah Dasar (SD) dengan spesifikasi berikut:
-      - Kelas: Kelas ${grade} SD (${faseLabel})
-      - Materi Pembelajaran: ${material}
+      Buatlah Modul Ajar (RPP) Kurikulum Merdeka Pendidikan Jasmani, Olahraga, dan Kesehatan (PJOK) tingkat Sekolah Dasar (SD/MI) yang SEPENUHNYA MENGACU pada Buku Panduan Guru PJOK resmi dari SIBI (Sistem Informasi Perbukuan Indonesia - Pusat Perbukuan BSKAP Kemendikbudristek):
+      - Referensi Buku Utama: ${sibiBook.bookTitle} (Penulis: ${sibiBook.authors}, ISBN: ${sibiBook.isbn}, Penerbit: ${sibiBook.publisher})
+      - Kelas & Fase: ${sibiBook.kelasLabel} (${sibiBook.fase})
+      - Materi / Unit Pembelajaran: ${material}
       - Alokasi Waktu: ${duration}
       - Model Pembelajaran: ${teachingModel}
-      
-      Harap berikan respons dalam format JSON terstruktur Bahasa Indonesia yang ramah guru, inspiratif, mendalam, dan praktis dengan skema yang tepat.
+
+      Wajib menyertakan:
+      1. Tujuan Pembelajaran yang memetakan Elemen CP PJOK SIBI (Keterampilan Gerak, Pengetahuan Gerak, Pemanfaatan Gerak, dan Pengembangan Karakter/Nilai Gerak).
+      2. Sarana & Prasarana yang mencantumkan Buku Panduan Guru PJOK SIBI Kemendikbudristek serta alat modifikasi ramah anak.
+      3. Kegiatan Pendahuluan (15 menit dengan pemanasan permainan/warming-up game), Kegiatan Inti (45 menit yang terbagi menjadi Aktivitas Pembelajaran 1, Aktivitas Pembelajaran 2, Aktivitas Pembelajaran 3 Permainan Peraturan Dimodifikasi, serta Pembelajaran Alternatif sesuai standar SIBI), dan Kegiatan Penutup (10 menit dengan pendinginan dan Refleksi kategori Sangat Menguasai/Menguasai/Belum Menguasai).
+      4. Asesmen Sikap, Pengetahuan, dan Keterampilan Proses Gerak (Sikap Awalan, Sikap Pelaksanaan, Sikap Akhir) sesuai rubrik Buku Panduan Guru PJOK SIBI.
+
+      Harap berikan respons dalam format JSON terstruktur Bahasa Indonesia yang formal, ramah guru, dan siap cetak.
     `;
 
     const systemInstruction = `
-      Anda adalah pakar kurikulum Pendidikan Jasmani, Olahraga, dan Kesehatan (PJOK) tingkat Sekolah Dasar.
-      Tugas Anda adalah membuat Modul Ajar (RPP) Kurikulum Merdeka yang sangat kreatif, aman (mengutamakan keselamatan siswa), dan menyenangkan (joyful learning).
-      Seluruh teks harus dalam Bahasa Indonesia yang formal namun ramah guru.
+      Anda adalah tim penyusun Buku Panduan Guru Pendidikan Jasmani, Olahraga, dan Kesehatan (PJOK) di Pusat Perbukuan BSKAP Kemendikbudristek (Sistem Informasi Perbukuan Indonesia / SIBI).
+      Tugas Anda adalah membuat Modul Ajar (RPP) PJOK Kurikulum Merdeka yang 100% sesuai dengan struktur, terminologi, 4 elemen Capaian Pembelajaran, pentahapan Aktivitas Pembelajaran 1-2-3, Pembelajaran Alternatif, dan Asesmen Proses Gerak pada Buku Panduan Guru PJOK SIBI Kemendikbudristek.
     `;
 
     const response = await generateContentWithFallback({

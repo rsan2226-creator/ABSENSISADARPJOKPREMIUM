@@ -64,10 +64,15 @@ import {
   getBrowserClient,
   getSupabaseProjectInfo
 } from "@/lib/supabase";
+import F4ExportBar from "@/components/F4ExportBar";
+import DatabaseCloudGuide from "@/components/DatabaseCloudGuide";
+import SibiGuideTab, { SibiQuickPicker } from "@/components/SibiGuideTab";
+import AutoFillGradesPanel from "@/components/AutoFillGradesPanel";
+import { exportActiveMenuAsF4 } from "@/lib/f4-document";
 
 export default function SadarDashboard() {
   // Navigation Tabs State
-  const [activeTab, setActiveTab] = useState<"overview" | "students" | "rpp" | "inventory" | "schedule" | "rombel" | "attendance" | "grades" | "infographics" | "materi" | "slides" | "lkpd" | "soal" | "database">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "students" | "rpp" | "inventory" | "schedule" | "rombel" | "attendance" | "grades" | "infographics" | "materi" | "slides" | "lkpd" | "soal" | "sibi" | "database">("overview");
 
   // Core Data States
   const [students, setStudents] = useState<Student[]>([]);
@@ -1999,7 +2004,7 @@ export default function SadarDashboard() {
         <head>
           <title>${currentRpp.judul}</title>
           <style>
-            @page { size: A4 portrait; margin: 1.5cm; }
+            @page { size: 215mm 330mm; margin: 1.5cm; }
             body { font-family: 'Times New Roman', Times, serif; color: #000; line-height: 1.45; font-size: 12px; margin: 0; padding: 15px; }
             .kop { text-align: center; border-bottom: 3px double #000; padding-bottom: 8px; margin-bottom: 14px; }
             .kop h1 { font-size: 14px; margin: 0; text-transform: uppercase; }
@@ -2765,7 +2770,7 @@ export default function SadarDashboard() {
           <meta charset="utf-8" />
           <title>${generatedSoal.judulAsesmen}</title>
           <style>
-            @page Section1 { size: 841.9pt 595.3pt; mso-page-orientation: landscape; margin: 1.1cm; }
+            @page Section1 { size: 936.0pt 612.0pt; mso-page-orientation: landscape; margin: 1.1cm; }
             div.Section1 { page: Section1; }
             body { font-family: 'Times New Roman', serif; font-size: 10pt; color: #000; line-height: 1.3; }
             table { width: 100%; border-collapse: collapse; margin-bottom: 12pt; }
@@ -2911,7 +2916,7 @@ export default function SadarDashboard() {
         <head>
           <title>${generatedSoal.judulAsesmen}</title>
           <style>
-            @page { size: A4 landscape; margin: 1cm; }
+            @page { size: 330mm 215mm; margin: 1cm; }
             body { font-family: 'Times New Roman', Times, serif; color: #000; font-size: 10px; line-height: 1.3; margin: 0; padding: 8px; }
             .kop { text-align: center; border-bottom: 3px double #000; padding-bottom: 6px; margin-bottom: 10px; }
             .kop h1 { font-size: 13px; margin: 0; text-transform: uppercase; }
@@ -3686,7 +3691,7 @@ export default function SadarDashboard() {
             th { background: #f3f4f6; text-align: center; font-weight: bold; }
             .sig { margin-top: 24px; display: flex; justify-content: space-between; font-size: 10px; page-break-inside: avoid; }
             .sig-box { width: 220px; text-align: center; }
-            @media print { @page { size: A4 landscape; margin: 0.8cm; } }
+            @media print { @page { size: 330mm 215mm; margin: 0.8cm; } }
           </style>
         </head>
         <body>
@@ -3965,7 +3970,7 @@ export default function SadarDashboard() {
             th { background: #f3f4f6; text-align: center; font-weight: bold; }
             .sig { margin-top: 20px; display: flex; justify-content: space-between; font-size: 10px; page-break-inside: avoid; }
             .sig-box { width: 220px; text-align: center; }
-            @media print { @page { size: A4 landscape; margin: 0.7cm; } }
+            @media print { @page { size: 330mm 215mm; margin: 0.7cm; } }
           </style>
         </head>
         <body>
@@ -4172,7 +4177,7 @@ export default function SadarDashboard() {
             .signature-space { height: 50px; }
             @media print {
               body { padding: 0; }
-              @page { margin: 1cm; size: A4 landscape; }
+              @page { margin: 1cm; size: 330mm 215mm; }
             }
           </style>
         </head>
@@ -4507,7 +4512,7 @@ export default function SadarDashboard() {
             .signature-space { height: 60px; }
             @media print {
               body { padding: 0; }
-              @page { margin: 1cm; }
+              @page { margin: 1.2cm; size: 215mm 330mm; }
             }
           </style>
         </head>
@@ -5023,7 +5028,7 @@ export default function SadarDashboard() {
         <head>
           <title>Rekapitulasi Absensi Bulanan - Kelas ${monthlyRecapRombel} (${monthName} ${monthlyRecapYear})</title>
           <style>
-            @page { size: landscape; margin: 0.8cm; }
+            @page { size: 330mm 215mm; margin: 0.8cm; }
             body { font-family: 'Times New Roman', Times, serif; color: #000; line-height: 1.2; margin: 0; padding: 15px; }
             .kop-container { border-bottom: 3px double #000; padding-bottom: 6px; margin-bottom: 12px; text-align: center; }
             .kop-text h1 { font-size: 13px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -5373,6 +5378,19 @@ export default function SadarDashboard() {
           </button>
 
           <button
+            id="nav-btn-sibi"
+            onClick={() => setActiveTab("sibi")}
+            className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+              activeTab === "sibi"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-950/20 font-semibold"
+                : "text-slate-500 hover:bg-emerald-50 hover:text-emerald-700"
+            }`}
+          >
+            <BookOpen className="h-4.5 w-4.5 text-emerald-500 opacity-90" />
+            <span>Buku Panduan PJOK (SIBI)</span>
+          </button>
+
+          <button
             id="nav-btn-rpp"
             onClick={() => setActiveTab("rpp")}
             className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -5526,6 +5544,7 @@ export default function SadarDashboard() {
               {activeTab === "slides" && "Slide Presentasi Siswa AI"}
               {activeTab === "lkpd" && "Penyusunan Lembar Kerja Siswa (LKPD) AI"}
               {activeTab === "soal" && "Generator Soal Praktik & Kisi-Kisi Asesmen Sumatif AI"}
+              {activeTab === "sibi" && "Buku Panduan Guru PJOK Resmi SIBI (Kemendikbudristek)"}
               {activeTab === "database" && "Koneksi Database Cloud (Supabase - Absensi2027)"}
             </span>
           </div>
@@ -5566,6 +5585,122 @@ export default function SadarDashboard() {
 
         {/* Content Tabs Wrapper */}
         <div className="p-8 flex-1 max-w-7xl w-full mx-auto" id="sadar-tab-container">
+          <F4ExportBar
+            menuLabel={
+              activeTab === "overview"
+                ? "Ringkasan Eksekutif & Kebugaran"
+                : activeTab === "students"
+                ? "Penilaian Kebugaran Jasmani (TKJI)"
+                : activeTab === "rombel"
+                ? "Data Induk Siswa & Rombel"
+                : activeTab === "attendance"
+                ? `Absensi Siswa Taktis (${
+                    attendanceSubTab === "daily"
+                      ? "Harian"
+                      : attendanceSubTab === "weekly"
+                      ? "Rekap Mingguan 1 Bulan"
+                      : attendanceSubTab === "semester"
+                      ? "Rekap Satu Semester"
+                      : "Rekap Bulanan"
+                  })`
+                : activeTab === "grades"
+                ? "Rekap Nilai Akhir Semester"
+                : activeTab === "rpp"
+                ? "Modul Ajar (RPP) Standar SIBI"
+                : activeTab === "infographics"
+                ? "Rancangan Infografis 3D AI"
+                : activeTab === "materi"
+                ? "Materi Ajar PJOK Standar SIBI"
+                : activeTab === "slides"
+                ? "Slide Presentasi Siswa AI"
+                : activeTab === "lkpd"
+                ? "Lembar Kerja Peserta Didik (LKPD)"
+                : activeTab === "soal"
+                ? "Kisi-Kisi, Soal Praktik & Format Penilaian"
+                : activeTab === "sibi"
+                ? `Silabus Buku Panduan Guru PJOK SIBI (Kelas ${rppGrade})`
+                : activeTab === "inventory"
+                ? "Inventaris Sarana & Alat Olahraga"
+                : activeTab === "schedule"
+                ? "Agenda & Jadwal Mengajar PJOK"
+                : "Laporan Status Database Cloud"
+            }
+            defaultOrientation={
+              activeTab === "students" ||
+              activeTab === "grades" ||
+              activeTab === "soal" ||
+              activeTab === "sibi" ||
+              activeTab === "slides" ||
+              (activeTab === "attendance" && attendanceSubTab !== "daily")
+                ? "landscape"
+                : "portrait"
+            }
+            onExport={(format, orientation) =>
+              exportActiveMenuAsF4(
+                {
+                  activeTab,
+                  schoolInfo: {
+                    schoolName,
+                    schoolAddress,
+                    headmasterName,
+                    headmasterNip,
+                    teacherName,
+                    teacherNip,
+                  },
+                  students,
+                  classFilter,
+                  selectedRombel,
+                  customRombels,
+                  inventory,
+                  schedule,
+                  savedPlans,
+                  currentRpp,
+                  rppGrade,
+                  rppMaterial,
+                  rppDuration,
+                  rppModel,
+                  generatedInfographic,
+                  infographicTopic,
+                  infographicMaterial,
+                  generatedMateri,
+                  materiMapel,
+                  materiKelas,
+                  materiFase,
+                  materiTopik,
+                  generatedSlides,
+                  slidesMateriPokok,
+                  slidesKelas,
+                  generatedLkpd,
+                  lkpdTopik,
+                  lkpdKelas,
+                  lkpdSintaks,
+                  generatedSoal,
+                  soalKelas,
+                  soalFase,
+                  soalJenisAsesmen,
+                  soalPenilaianRombel,
+                  soalStudentScores,
+                  attendanceSubTab,
+                  attendanceDate,
+                  attendanceRombel,
+                  attendanceList,
+                  attendanceRecords,
+                  monthlyRecapMonth,
+                  monthlyRecapYear,
+                  monthlyRecapRombel,
+                  semesterRecapType,
+                  gradesRombel,
+                  studentGrades,
+                  tp1Desc,
+                  tp2Desc,
+                  tp3Desc,
+                  tp4Desc,
+                },
+                format,
+                orientation
+              )
+            }
+          />
           <AnimatePresence mode="wait">
             
             {/* TAB 1: OVERVIEW / DASHBOARD */}
@@ -6391,10 +6526,19 @@ export default function SadarDashboard() {
                    <div className="space-y-1 border-b border-slate-100 pb-3">
                      <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                        <Sparkles className="h-5 w-5 text-amber-500 animate-spin" />
-                       Parameter Pembelajaran AI
+                       Parameter Pembelajaran AI (Standar SIBI)
                      </h3>
-                     <p className="text-xs text-slate-400 font-semibold">Pilih kurikulum untuk merumuskan Modul Ajar</p>
+                     <p className="text-xs text-slate-400 font-semibold">Mengacu pada Buku Panduan Guru PJOK SIBI Kemendikbudristek</p>
                    </div>
+
+                   <SibiQuickPicker
+                     grade={rppGrade}
+                     label="Pilih Unit dari Buku Panduan PJOK SIBI:"
+                     onSelectUnit={(unit) => {
+                       setRppMaterial(`Unit ${unit.unitNumber} SIBI: ${unit.title.replace(/^Unit \d+:\s*/i, "")}`);
+                       setRppDuration(unit.alokasiWaktu);
+                     }}
+                   />
  
                    {/* Form fields */}
                    <div className="space-y-4 text-xs">
@@ -7052,10 +7196,19 @@ export default function SadarDashboard() {
                   <div className="space-y-1 border-b border-slate-100 pb-3">
                     <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                       <Sparkles className="h-5 w-5 text-cyan-500 animate-pulse" />
-                      Asisten Bahan Ajar AI
+                      Asisten Bahan Ajar AI (Standar SIBI)
                     </h3>
-                    <p className="text-xs text-slate-400 font-semibold">Buat materi ajar interaktif utuh dilengkapi tabel ringkasan</p>
+                    <p className="text-xs text-slate-400 font-semibold">Buat materi ajar utuh sesuai Buku Panduan Guru PJOK SIBI</p>
                   </div>
+
+                  <SibiQuickPicker
+                    grade={materiKelas}
+                    label="Isi Cepat dari Unit Buku PJOK SIBI:"
+                    onSelectUnit={(unit) => {
+                      setMateriTopik(`${unit.title} (Buku Panduan PJOK SIBI)`);
+                      setMateriTujuan(unit.tujuanPembelajaran.join(" "));
+                    }}
+                  />
 
                   <div className="space-y-4 text-xs">
                     {/* Prompt Version Selector */}
@@ -7756,12 +7909,21 @@ export default function SadarDashboard() {
                   <div className="space-y-1 border-b border-slate-100 pb-3">
                     <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                       <FileText className="h-5 w-5 text-amber-500 animate-pulse" />
-                      Rancangan LKPD Kurikulum Merdeka AI
+                      Rancangan LKPD PJOK (Standar SIBI)
                     </h3>
                     <p className="text-xs text-slate-400 font-semibold">
-                      Susun lembar kerja interaktif bermakna, aktif, dan kontekstual secara instan.
+                      Susun lembar kerja interaktif sesuai Unit Buku Panduan Guru PJOK SIBI.
                     </p>
                   </div>
+
+                  <SibiQuickPicker
+                    grade={lkpdKelas}
+                    label="Isi Cepat dari Unit Buku PJOK SIBI:"
+                    onSelectUnit={(unit) => {
+                      setLkpdTopik(`${unit.title} (Standar SIBI)`);
+                      setLkpdTujuan(unit.tujuanPembelajaran.join(" "));
+                    }}
+                  />
 
                   <div className="space-y-4 text-xs">
                     {/* Prompt Version Selector */}
@@ -10865,6 +11027,32 @@ export default function SadarDashboard() {
                       </div>
                     </div>
 
+                    {/* Menu Isi Nilai Otomatis */}
+                    <AutoFillGradesPanel
+                      gradesRombel={gradesRombel}
+                      rombelStudents={students.filter((s) => s.grade === gradesRombel)}
+                      attendanceRecords={attendanceRecords}
+                      soalStudentScores={soalStudentScores}
+                      currentGrades={studentGrades}
+                      onApplyAutoGrades={(updatedGrades, summaryMsg) => {
+                        setStudentGrades(updatedGrades);
+                        localStorage.setItem("sadar_student_grades", JSON.stringify(updatedGrades));
+                        syncToSupabase("sadar_student_grades", updatedGrades);
+                        setGradesSuccessMessage(summaryMsg);
+                        setTimeout(() => setGradesSuccessMessage(null), 5000);
+                      }}
+                      onApplySibiTpDescriptions={(t1, t2, t3, t4) => {
+                        handleSaveTpDescriptions(1, t1);
+                        handleSaveTpDescriptions(2, t2);
+                        handleSaveTpDescriptions(3, t3);
+                        handleSaveTpDescriptions(4, t4);
+                        setGradesSuccessMessage(
+                          `Deskripsi TP 1 s/d TP 4 untuk Kelas ${gradesRombel} berhasil diisi otomatis dari Buku Panduan Guru PJOK SIBI!`
+                        );
+                        setTimeout(() => setGradesSuccessMessage(null), 5000);
+                      }}
+                    />
+
                     {/* Grades Grid Table */}
                     <div className="bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden" id="grades-students-card">
                       <div className="p-5 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
@@ -11257,6 +11445,14 @@ export default function SadarDashboard() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                   {/* Left Column (4 cols): Input Form & Prompt Preview */}
                   <div className="lg:col-span-4 space-y-6">
+                    <SibiQuickPicker
+                      grade={soalKelas}
+                      label="Isi Cepat dari Unit Buku Panduan Guru PJOK SIBI:"
+                      onSelectUnit={(unit) => {
+                        setSoalTujuanPembelajaran(unit.tujuanPembelajaran.join("\n"));
+                        setSoalRuangLingkup(`${unit.title} (${unit.pokokMateri.join(", ")})`);
+                      }}
+                    />
                     <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm space-y-5">
                       <div className="border-b border-slate-100 pb-3">
                         <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
@@ -11264,7 +11460,7 @@ export default function SadarDashboard() {
                           Parameter Penyusunan Soal Praktik
                         </h3>
                         <p className="text-[11px] text-slate-400 font-semibold mt-0.5">
-                          Sesuaikan Kelas, Fase, Jenis Asesmen, dan Tujuan Pembelajaran yang diujikan.
+                          Sesuaikan Kelas, Fase, Jenis Asesmen, dan Tujuan Pembelajaran sesuai Buku Panduan PJOK SIBI.
                         </p>
                       </div>
 
@@ -12159,10 +12355,209 @@ create policy "Allow public delete access" on public.sadar_app_data for delete u
 
                   </div>
                 </div>
+
+                <DatabaseCloudGuide
+                  studentsCount={students.length}
+                  rombelsCount={customRombels.length}
+                  attendanceCount={Object.keys(attendanceRecords).length}
+                  gradesCount={Object.keys(studentGrades).length}
+                  plansCount={savedPlans.length}
+                  inventoryCount={inventory.length}
+                  scheduleCount={schedule.length}
+                  onExportJsonBackup={() => {
+                    const backupPayload = {
+                      exportedAt: new Date().toISOString(),
+                      supabaseProjectId: "adbrzheropnjefvoexhti",
+                      table: "public.sadar_app_data",
+                      data: {
+                        sadar_students: students,
+                        sadar_custom_rombels: customRombels,
+                        sadar_attendance_records: attendanceRecords,
+                        sadar_student_grades: studentGrades,
+                        sadar_saved_plans: savedPlans,
+                        sadar_inventory: inventory,
+                        sadar_schedule: schedule,
+                      },
+                    };
+                    const blob = new Blob([JSON.stringify(backupPayload, null, 2)], {
+                      type: "application/json",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `Backup_Database_SADAR_PJOK_${new Date().toISOString().slice(0, 10)}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  }}
+                />
+              </motion.div>
+            )}
+
+            {activeTab === "sibi" && (
+              <motion.div
+                key="tab-sibi"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.2 }}
+              >
+                <SibiGuideTab
+                  selectedGrade={rppGrade}
+                  onApplyToRpp={(grade, unit) => {
+                    setRppGrade(grade);
+                    setRppMaterial(`Unit ${unit.unitNumber} SIBI: ${unit.title.replace(/^Unit \d+:\s*/i, "")}`);
+                    setRppDuration(unit.alokasiWaktu);
+                    setActiveTab("rpp");
+                  }}
+                  onApplyToMateri={(grade, fase, unit) => {
+                    const numMap: Record<string, string> = { I: "1", II: "2", III: "3", IV: "4", V: "5", VI: "6" };
+                    setMateriKelas(`Kelas ${numMap[grade] || "4"}`);
+                    setMateriFase(fase);
+                    setMateriTopik(`${unit.title} (Buku Panduan PJOK SIBI)`);
+                    setMateriTujuan(unit.tujuanPembelajaran.join(" "));
+                    setActiveTab("materi");
+                  }}
+                  onApplyToLkpd={(grade, fase, unit) => {
+                    const numMap: Record<string, string> = { I: "1", II: "2", III: "3", IV: "4", V: "5", VI: "6" };
+                    setLkpdKelas(`Kelas ${numMap[grade] || "4"}`);
+                    setLkpdFase(fase.replace("Fase ", ""));
+                    setLkpdTopik(`${unit.title} (Standar SIBI)`);
+                    setLkpdTujuan(unit.tujuanPembelajaran.join(" "));
+                    setActiveTab("lkpd");
+                  }}
+                  onApplyToSoal={(grade, fase, unit) => {
+                    setSoalKelas(`Kelas ${grade}`);
+                    setSoalFase(fase);
+                    setSoalTujuanPembelajaran(unit.tujuanPembelajaran.join("\n"));
+                    setSoalRuangLingkup(`${unit.title} — ${unit.pokokMateri.join("; ")}`);
+                    setActiveTab("soal");
+                  }}
+                />
               </motion.div>
             )}
 
           </AnimatePresence>
+
+          <div className="mt-8">
+            <F4ExportBar
+              menuLabel={
+                activeTab === "overview"
+                  ? "Ringkasan Eksekutif & Kebugaran"
+                  : activeTab === "students"
+                  ? "Penilaian Kebugaran Jasmani (TKJI)"
+                  : activeTab === "rombel"
+                  ? "Data Induk Siswa & Rombel"
+                  : activeTab === "attendance"
+                  ? `Absensi Siswa Taktis (${
+                      attendanceSubTab === "daily"
+                        ? "Harian"
+                        : attendanceSubTab === "weekly"
+                        ? "Rekap Mingguan 1 Bulan"
+                        : attendanceSubTab === "semester"
+                        ? "Rekap Satu Semester"
+                        : "Rekap Bulanan"
+                    })`
+                  : activeTab === "grades"
+                  ? "Rekap Nilai Akhir Semester"
+                  : activeTab === "rpp"
+                  ? "Modul Ajar (RPP) Standar SIBI"
+                  : activeTab === "infographics"
+                  ? "Rancangan Infografis 3D AI"
+                  : activeTab === "materi"
+                  ? "Materi Ajar PJOK Standar SIBI"
+                  : activeTab === "slides"
+                  ? "Slide Presentasi Siswa AI"
+                  : activeTab === "lkpd"
+                  ? "Lembar Kerja Peserta Didik (LKPD)"
+                  : activeTab === "soal"
+                  ? "Kisi-Kisi, Soal Praktik & Format Penilaian"
+                  : activeTab === "sibi"
+                  ? `Silabus Buku Panduan Guru PJOK SIBI (Kelas ${rppGrade})`
+                  : activeTab === "inventory"
+                  ? "Inventaris Sarana & Alat Olahraga"
+                  : activeTab === "schedule"
+                  ? "Agenda & Jadwal Mengajar PJOK"
+                  : "Laporan Status Database Cloud"
+              }
+              defaultOrientation={
+                activeTab === "students" ||
+                activeTab === "grades" ||
+                activeTab === "soal" ||
+                activeTab === "sibi" ||
+                activeTab === "slides" ||
+                (activeTab === "attendance" && attendanceSubTab !== "daily")
+                  ? "landscape"
+                  : "portrait"
+              }
+              onExport={(format, orientation) =>
+                exportActiveMenuAsF4(
+                  {
+                    activeTab,
+                    schoolInfo: {
+                      schoolName,
+                      schoolAddress,
+                      headmasterName,
+                      headmasterNip,
+                      teacherName,
+                      teacherNip,
+                    },
+                    students,
+                    classFilter,
+                    selectedRombel,
+                    customRombels,
+                    inventory,
+                    schedule,
+                    savedPlans,
+                    currentRpp,
+                    rppGrade,
+                    rppMaterial,
+                    rppDuration,
+                    rppModel,
+                    generatedInfographic,
+                    infographicTopic,
+                    infographicMaterial,
+                    generatedMateri,
+                    materiMapel,
+                    materiKelas,
+                    materiFase,
+                    materiTopik,
+                    generatedSlides,
+                    slidesMateriPokok,
+                    slidesKelas,
+                    generatedLkpd,
+                    lkpdTopik,
+                    lkpdKelas,
+                    lkpdSintaks,
+                    generatedSoal,
+                    soalKelas,
+                    soalFase,
+                    soalJenisAsesmen,
+                    soalPenilaianRombel,
+                    soalStudentScores,
+                    attendanceSubTab,
+                    attendanceDate,
+                    attendanceRombel,
+                    attendanceList,
+                    attendanceRecords,
+                    monthlyRecapMonth,
+                    monthlyRecapYear,
+                    monthlyRecapRombel,
+                    semesterRecapType,
+                    gradesRombel,
+                    studentGrades,
+                    tp1Desc,
+                    tp2Desc,
+                    tp3Desc,
+                    tp4Desc,
+                  },
+                  format,
+                  orientation
+                )
+              }
+            />
+          </div>
         </div>
 
       </main>

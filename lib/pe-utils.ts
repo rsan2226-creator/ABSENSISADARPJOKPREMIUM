@@ -208,24 +208,79 @@ export const initialInventory: InventoryItem[] = [
   { id: "inv-9", name: "Peluit Guru", category: "Pendukung", total: 3, goodCondition: 3, damagedCondition: 0, unit: "Buah", notes: "Merk Fox 40, suara nyaring" }
 ];
 
-// Initial teaching schedule dataset
+// Initial teaching schedule dataset (Sesuai Unit Buku Panduan Guru PJOK SIBI Kemendikbudristek)
 export const initialSchedule: ScheduleItem[] = [
-  { id: "sch-1", day: "Senin", timeSlot: "07:15 - 08:35", grade: "Kelas IV-A", topic: "Permainan Kasti: Teknik Melempar", location: "Lapangan" },
-  { id: "sch-2", day: "Senin", timeSlot: "08:45 - 10:05", grade: "Kelas IV-B", topic: "Permainan Kasti: Teknik Melempar", location: "Lapangan" },
-  { id: "sch-3", day: "Selasa", timeSlot: "07:15 - 08:35", grade: "Kelas V-A", topic: "Sepak Bola: Menendang Kaki Dalam", location: "Lapangan" },
-  { id: "sch-4", day: "Selasa", timeSlot: "08:45 - 10:05", grade: "Kelas V-B", topic: "Sepak Bola: Menendang Kaki Dalam", location: "Lapangan" },
-  { id: "sch-5", day: "Rabu", timeSlot: "07:15 - 08:35", grade: "Kelas VI-A", topic: "Kebugaran Jasmani: Pengukuran TKJI", location: "Lapangan" },
-  { id: "sch-6", day: "Rabu", timeSlot: "08:45 - 10:05", grade: "Kelas VI-B", topic: "Kebugaran Jasmani: Pengukuran TKJI", location: "Lapangan" },
-  { id: "sch-7", day: "Kamis", timeSlot: "07:15 - 08:35", grade: "Kelas III-A", topic: "Gerak Lokomotor: Melompat & Berlari", location: "Aula" },
-  { id: "sch-8", day: "Jumat", timeSlot: "07:30 - 08:40", grade: "Kelas I-A", topic: "Pengenalan Pola Gerak Dominan", location: "Selasar" }
+  { id: "sch-1", day: "Senin", timeSlot: "07:15 - 08:35", grade: "Kelas IV-A", topic: "Unit 3 SIBI: Permainan Lapangan (Kasti - Melempar & Menangkap)", location: "Lapangan" },
+  { id: "sch-2", day: "Senin", timeSlot: "08:45 - 10:05", grade: "Kelas IV-B", topic: "Unit 1 SIBI: Permainan Invasi (Sepak Bola & Bola Tangan Modifikasi)", location: "Lapangan" },
+  { id: "sch-3", day: "Selasa", timeSlot: "07:15 - 08:35", grade: "Kelas V-A", topic: "Unit 2 SIBI: Permainan Net (Passing Bawah & Atas Bola Voli Mini)", location: "Lapangan" },
+  { id: "sch-4", day: "Selasa", timeSlot: "08:45 - 10:05", grade: "Kelas V-B", topic: "Unit 5 SIBI: Aktivitas Atletik (Start Jongkok & Lari Estafet)", location: "Lapangan" },
+  { id: "sch-5", day: "Rabu", timeSlot: "07:15 - 08:35", grade: "Kelas VI-A", topic: "Unit 8 SIBI: Pengukuran Kebugaran Jasmani (TKJI) & P3K (RICE)", location: "Lapangan" },
+  { id: "sch-6", day: "Rabu", timeSlot: "08:45 - 10:05", grade: "Kelas VI-B", topic: "Unit 6 SIBI: Rangkaian Senam Lantai (Guling Depan & Belakang)", location: "Aula" },
+  { id: "sch-7", day: "Kamis", timeSlot: "07:15 - 08:35", grade: "Kelas III-A", topic: "Unit 1 SIBI: Kombinasi Pola Gerak Dasar Lokomotor", location: "Aula" },
+  { id: "sch-8", day: "Jumat", timeSlot: "07:30 - 08:40", grade: "Kelas I-A", topic: "Unit 1 SIBI: Aktivitas Pola Gerak Dasar Lokomotor", location: "Selasar" }
 ];
 
-// Suggested topics based on grade level
+// Suggested topics based on grade level (Bersumber dari Unit 1-8 Buku Panduan Guru PJOK SIBI Kemendikbudristek)
 export const materialSuggestionsByGrade: { [key: string]: string[] } = {
-  "I": ["Pola Gerak Dasar Lokomotor (Berjalan, Berlari, Melompat)", "Gerak Non-Lokomotor (Meregang, Menekuk, Berputar)", "Senam Irama Anak Sederhana", "Pengenalan Aktivitas Air / Bermain Air"],
-  "II": ["Pola Gerak Manipulatif (Melempar, Menangkap, Menendang Bola Plastik)", "Keseimbangan Statis dan Dinamis (Senam Lantai)", "Pemanasan Kreatif Bernyanyi", "Aktivitas Kebersihan Diri dan Makanan Sehat"],
-  "III": ["Kombinasi Gerak Lokomotor dan Non-Lokomotor", "Permainan Tradisional Kucing-Kucingan dan Bentengan", "Senam Ketangkasan Sederhana", "Bahaya Jajanan Sembarangan & Pola Istirahat"],
-  "IV": ["Teknik Dasar Kasti: Melempar, Menangkap, Memukul", "Teknik Dasar Sepak Bola: Menggiring dan Menendang Kaki Bagian Dalam", "Pengenalan Kebugaran Jasmani (Kelincahan & Kelenturan)", "Pertolongan Pertama pada Cedera Ringan (P3K) Sekolah"],
-  "V": ["Teknik Dasar Bola Voli: Passing Bawah & Passing Atas", "Atletik: Teknik Start Jongkok & Lari Estafet", "Kombinasi Senam Lantai Guling Depan & Belakang", "Bahaya Narkoba, Merokok, dan Minuman Keras sejak Dini"],
-  "VI": ["Teknik Dasar Bola Basket: Dribbling & Chest Pass", "Atletik: Lompat Jauh Gaya Menggantung", "Kombinasi Senam Rambu / Senam Kesegaran Jasmani (SKJ)", "Memahami Perkembangan Fisik Masa Pubertas"]
+  "I": [
+    "Unit 1 SIBI: Aktivitas Pola Gerak Dasar Lokomotor (Berjalan, Berlari, Melompat)",
+    "Unit 2 SIBI: Aktivitas Pola Gerak Dasar Nonlokomotor (Memutar, Mengayun, Membungkuk, Meliuk)",
+    "Unit 3 SIBI: Aktivitas Pola Gerak Dasar Manipulatif (Melempar dan Menangkap Bola)",
+    "Unit 4 SIBI: Aktivitas Senam (Gerak Dominan Keseimbangan Statis & Dinamis)",
+    "Unit 5 SIBI: Aktivitas Gerak Berirama (Langkah Kaki & Ayunan Lengan)",
+    "Unit 6 SIBI: Aktivitas Pengenalan Air & Keselamatan di Kolam",
+    "Unit 7 SIBI: Aktivitas Kebugaran Jasmani (Sikap Tubuh Diam dan Bergerak)",
+    "Unit 8 SIBI: Mengenal Bagian-Bagian Tubuh & Kebersihan Diri"
+  ],
+  "II": [
+    "Unit 1 SIBI: Aktivitas Variasi Pola Gerak Dasar Lokomotor",
+    "Unit 2 SIBI: Aktivitas Variasi Pola Gerak Dasar Nonlokomotor (Menarik & Mendorong)",
+    "Unit 3 SIBI: Aktivitas Variasi Pola Gerak Dasar Manipulatif (Lempar-Tangkap & Tendang-Tahan)",
+    "Unit 4 SIBI: Aktivitas Senam (Bertumpu, Berguling, dan Mendarat)",
+    "Unit 5 SIBI: Aktivitas Gerak Berirama (Variasi Langkah & Ayunan Mengikuti Ketukan)",
+    "Unit 6 SIBI: Aktivitas Pengenalan Air (Mengapung & Meluncur Dasar)",
+    "Unit 7 SIBI: Aktivitas Kebugaran Jasmani (Latihan Kekuatan Otot Lengan, Bahu, Perut)",
+    "Unit 8 SIBI: Cara Menjaga Kebersihan Lingkungan Kamar, Rumah, dan Sekolah"
+  ],
+  "III": [
+    "Unit 1 SIBI: Aktivitas Kombinasi Pola Gerak Dasar Lokomotor (Jalan, Lari, Lompat)",
+    "Unit 2 SIBI: Aktivitas Kombinasi Pola Gerak Dasar Nonlokomotor",
+    "Unit 3 SIBI: Aktivitas Kombinasi Pola Gerak Dasar Manipulatif",
+    "Unit 4 SIBI: Aktivitas Gerak Dominan Senam Lantai",
+    "Unit 5 SIBI: Aktivitas Gerak Berirama (Kombinasi Langkah & Ayunan Lengan)",
+    "Unit 6 SIBI: Aktivitas Permainan dan Olahraga di Air (Dasar Renang Gaya Dada)",
+    "Unit 7 SIBI: Aktivitas Kebugaran Jasmani (Daya Tahan, Kekuatan, dan Kelenturan)",
+    "Unit 8 SIBI: Aktivitas Fisik, Istirahat, dan Memilih Makanan Bergizi Seimbang (Isi Piringku)"
+  ],
+  "IV": [
+    "Unit 1 SIBI: Variasi & Kombinasi Gerak Dasar Permainan Invasi (Sepak Bola & Bola Tangan Mini)",
+    "Unit 2 SIBI: Variasi & Kombinasi Gerak Dasar Permainan Net (Bola Voli Mini)",
+    "Unit 3 SIBI: Variasi & Kombinasi Gerak Dasar Permainan Lapangan (Bola Kasti)",
+    "Unit 4 SIBI: Aktivitas Bela Diri Pencak Silat (Kuda-Kuda, Langkah, Pukulan, Tangkisan)",
+    "Unit 5 SIBI: Aktivitas Gerak Dasar Atletik (Jalan Cepat, Lari Cepat, Lompat Jauh, Lempar Turbo)",
+    "Unit 6 SIBI: Aktivitas Pola Gerak Dominan Senam Lantai (Sikap Lilin & Guling Depan)",
+    "Unit 7 SIBI: Aktivitas Gerak Berirama & Renang Gaya Dada Dasar",
+    "Unit 8 SIBI: Aktivitas Kebugaran Jasmani & Pemeliharaan Kebersihan Alat Reproduksi"
+  ],
+  "V": [
+    "Unit 1 SIBI: Aktivitas Permainan Invasi (Modifikasi Gerak Passing, Dribbling, Shooting)",
+    "Unit 2 SIBI: Aktivitas Permainan Net (Passing Bawah, Passing Atas, Servis Bola Voli)",
+    "Unit 3 SIBI: Aktivitas Permainan Lapangan (Melempar, Menangkap, Memukul Bola Kasti)",
+    "Unit 4 SIBI: Aktivitas Bela Diri Pencak Silat (Kombinasi Serangan & Belaan)",
+    "Unit 5 SIBI: Aktivitas Gerak Dasar Atletik (Start Jongkok, Lari Estafet, Lompat Jauh)",
+    "Unit 6 SIBI: Aktivitas Senam Lantai (Guling Depan, Guling Belakang, Lompat Kangkang)",
+    "Unit 7 SIBI: Aktivitas Gerak Berirama & Keselamatan di Air",
+    "Unit 8 SIBI: Aktivitas Kebugaran Jasmani (Daya Tahan Jantung-Paru) & Bahaya Merokok/NAPZA"
+  ],
+  "VI": [
+    "Unit 1 SIBI: Modifikasi Pola Gerak Dasar Permainan Invasi (Bola Basket & Sepak Bola)",
+    "Unit 2 SIBI: Modifikasi Pola Gerak Dasar Permainan Net (Bola Voli & Bulu Tangkis)",
+    "Unit 3 SIBI: Modifikasi Pola Gerak Dasar Permainan Lapangan (Kasti / Rounders)",
+    "Unit 4 SIBI: Aktivitas Bela Diri Pencak Silat (Rangkaian Jurus Serang-Bela)",
+    "Unit 5 SIBI: Aktivitas Atletik (Lompat Jauh Gaya Menggantung & Tolak Peluru Anak)",
+    "Unit 6 SIBI: Aktivitas Senam Lantai (Rangkaian Guling Depan, Belakang & Meroda)",
+    "Unit 7 SIBI: Aktivitas Gerak Berirama (SKJ) & Penyelamatan di Air (Water Safety)",
+    "Unit 8 SIBI: Pengukuran Kebugaran Jasmani (TKJI) & Pertolongan Pertama Cedera (P3K/RICE)"
+  ]
 };
+
