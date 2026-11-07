@@ -393,6 +393,7 @@ export default function SadarDashboard() {
   const [isFetchingDb, setIsFetchingDb] = useState<boolean>(false);
   const [syncSuccess, setSyncSuccess] = useState<string | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [pendingCloudAction, setPendingCloudAction] = useState<"push" | "pull" | null>(null);
 
   // Inventory Modal / Form State
   const [isEditingInventory, setIsEditingInventory] = useState<boolean>(false);
@@ -3076,34 +3077,135 @@ export default function SadarDashboard() {
     }
   };
 
-  // CSV Excel Template Generator and Downloader
+  // Native Multi-Column Excel (.xlsx) Template Generator and Downloader
   const handleDownloadTemplate = () => {
     const headers = [
-      "Nama Lengkap",
-      "Jenis Kelamin (L atau P)",
-      "Kelas (Contoh: IV-A)"
+      "No",
+      "Nama Lengkap Siswa",
+      "Jenis Kelamin (L/P)",
+      "Kelas / Rombel",
+      "Tinggi Badan (cm)",
+      "Berat Badan (kg)",
+      "Lari Sprint (detik)",
+      "Sit-Up 30d (kali)",
+      "Push-Up 30d (kali)",
+      "Loncat Tegak (cm)",
+      "Lari 600m (detik)"
     ];
-    const rows = [
-      ["Budi Santoso", "L", "IV-A"],
-      ["Siti Aminah", "P", "V-B"],
-      ["Randi Hermawan", "L", "VI-A"]
+
+    const sampleRows = [
+      [1, "Budi Santoso", "L", selectedRombel || "IV-A", 138, 35, 6.2, 20, 15, 40, 165],
+      [2, "Siti Aminah Putri", "P", selectedRombel || "IV-A", 136, 33, 6.8, 18, 13, 38, 178],
+      [3, "Randi Hermawan", "L", "V-B", 143, 39, 5.9, 23, 18, 45, 155],
+      [4, "Nabila Zahra", "P", "VI-A", 148, 42, 6.4, 21, 15, 42, 164],
+      [5, "", "", "", "", "", "", "", "", "", ""]
     ];
-    
-    // Add UTF-8 BOM so Excel opens it with correct encoding (essential for Indonesian characters & delimiters)
-    // We use Semicolon (;) as the separator so Indonesian locale MS Excel parses columns automatically
-    const csvContent = "\uFEFF" + [headers.join(";"), ...rows.map(row => row.join(";"))].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "template_siswa_sadar_pjok.csv");
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    const wsData = [headers, ...sampleRows];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Set neat per-column widths so every column is clearly visible in Excel
+    ws["!cols"] = [
+      { wch: 6 },  // Kolom A: No
+      { wch: 28 }, // Kolom B: Nama Lengkap Siswa
+      { wch: 20 }, // Kolom C: Jenis Kelamin (L/P)
+      { wch: 16 }, // Kolom D: Kelas / Rombel
+      { wch: 18 }, // Kolom E: Tinggi Badan (cm)
+      { wch: 18 }, // Kolom F: Berat Badan (kg)
+      { wch: 18 }, // Kolom G: Lari Sprint (detik)
+      { wch: 18 }, // Kolom H: Sit-Up 30d (kali)
+      { wch: 18 }, // Kolom I: Push-Up 30d (kali)
+      { wch: 18 }, // Kolom J: Loncat Tegak (cm)
+      { wch: 18 }  // Kolom K: Lari 600m (detik)
+    ];
+
+    const guideData = [
+      ["PETUNJUK PENGISIAN TEMPLATE EXCEL DATA SISWA & ROMBEL (PER KOLOM)"],
+      [""],
+      ["Kolom Excel", "Nama Kolom", "Sifat", "Contoh Pengisian & Keterangan"],
+      ["Kolom A", "No", "Opsional", "Nomor urut siswa (1, 2, 3, dst.)"],
+      ["Kolom B", "Nama Lengkap Siswa", "WAJIB", "Nama lengkap peserta didik (Contoh: Budi Santoso)"],
+      ["Kolom C", "Jenis Kelamin (L/P)", "WAJIB", "Isi dengan huruf L (Laki-laki) atau P (Perempuan)"],
+      ["Kolom D", "Kelas / Rombel", "WAJIB", "Isi nama kelas/rombel (Contoh: I-A, II-A, III-A, IV-A, V-B, VI-A)"],
+      ["Kolom E", "Tinggi Badan (cm)", "Opsional", "Tinggi badan dalam cm (Contoh: 138). Jika dikosongkan otomatis diisi 135"],
+      ["Kolom F", "Berat Badan (kg)", "Opsional", "Berat badan dalam kg (Contoh: 35). Jika dikosongkan otomatis diisi 30"],
+      ["Kolom G", "Lari Sprint (detik)", "Opsional", "Waktu lari cepat 30m/40m dalam detik (Contoh: 6.2)"],
+      ["Kolom H", "Sit-Up 30d (kali)", "Opsional", "Jumlah baring duduk 30 detik (Contoh: 20)"],
+      ["Kolom I", "Push-Up 30d (kali)", "Opsional", "Jumlah push-up 30 detik (Contoh: 15)"],
+      ["Kolom J", "Loncat Tegak (cm)", "Opsional", "Tinggi loncat tegak dalam cm (Contoh: 40)"],
+      ["Kolom K", "Lari 600m (detik)", "Opsional", "Waktu lari 600m dalam detik (Contoh: 165)"]
+    ];
+    const wsGuide = XLSX.utils.aoa_to_sheet(guideData);
+    wsGuide["!cols"] = [{ wch: 14 }, { wch: 24 }, { wch: 12 }, { wch: 68 }];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "1_Template_Input_Siswa");
+    XLSX.utils.book_append_sheet(wb, wsGuide, "2_Petunjuk_Per_Kolom");
+
+    XLSX.writeFile(wb, "Template_Input_Siswa_Per_Kolom_PJOK.xlsx");
   };
 
-  // Parse Student Data Upload
+  // Helper to convert an array of row arrays into Student[] (supports both [No, Nama, L/P, Kelas...] and [Nama, L/P, Kelas...])
+  const parseRowsToStudents = (rows: any[][], idPrefix: string): Student[] => {
+    const parsed: Student[] = [];
+    for (let i = 0; i < rows.length; i++) {
+      const rawRow = rows[i];
+      if (!Array.isArray(rawRow) || rawRow.length === 0) continue;
+
+      const cols = rawRow.map((c) => String(c ?? "").replace(/^["']|["']$/g, "").trim());
+      if (cols.every((c) => !c)) continue;
+
+      // Skip header row
+      const joinedLower = cols.slice(0, 4).join(" ").toLowerCase();
+      if (
+        joinedLower.includes("nama lengkap") ||
+        joinedLower.includes("jenis kelamin") ||
+        (cols[0].toLowerCase() === "no" && cols[1]?.toLowerCase().includes("nama")) ||
+        (cols[0].toLowerCase().includes("nama") && cols[1]?.toLowerCase().includes("kelamin"))
+      ) {
+        continue;
+      }
+
+      // Detect whether Column 0 is a row number ("No" column: e.g., "1", "2") or directly the student's name
+      const firstColIsNumber = /^\d+$/.test(cols[0]) && cols.length >= 4 && /[a-zA-Z]/.test(cols[1]);
+      const offset = firstColIsNumber ? 1 : 0;
+
+      const name = cols[offset] || "";
+      if (!name || name.length < 2) continue;
+
+      const genderInput = (cols[offset + 1] || "L").toUpperCase();
+      const gender: "L" | "P" =
+        genderInput.startsWith("P") || genderInput === "PEREMPUAN" || genderInput === "WANITA"
+          ? "P"
+          : "L";
+      const grade = cols[offset + 2] || selectedRombel || "IV-A";
+      const height = parseFloat(cols[offset + 3]) || 135;
+      const weight = parseFloat(cols[offset + 4]) || 30;
+      const runSpeed = parseFloat(cols[offset + 5]) || 0;
+      const sitUps = parseInt(cols[offset + 6], 10) || 0;
+      const pushUps = parseInt(cols[offset + 7], 10) || 0;
+      const verticalJump = parseFloat(cols[offset + 8]) || 0;
+      const runDistance = parseFloat(cols[offset + 9]) || 0;
+
+      parsed.push({
+        id: `${idPrefix}-${Date.now()}-${i}`,
+        name,
+        gender,
+        grade,
+        height,
+        weight,
+        runSpeed,
+        sitUps,
+        pushUps,
+        verticalJump,
+        runDistance,
+        updatedAt: new Date().toISOString().split("T")[0]
+      });
+    }
+    return parsed;
+  };
+
+  // Parse Student Data Upload (Supports native .xlsx, .xls, and .csv)
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -3111,67 +3213,54 @@ export default function SadarDashboard() {
     setImportError(null);
     setImportSuccess(null);
 
+    const fileNameLower = file.name.toLowerCase();
+    const isExcelBinary = fileNameLower.endsWith(".xlsx") || fileNameLower.endsWith(".xls");
+
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const text = event.target?.result as string;
-        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-        
-        if (lines.length <= 1) {
-          setImportError("File kosong atau tidak memiliki baris data selain header.");
-          return;
-        }
+        let rows: any[][] = [];
 
-        const dataRows = lines.slice(1);
-        const parsed: Student[] = [];
-
-        for (let i = 0; i < dataRows.length; i++) {
-          const row = dataRows[i];
-          const delimiter = row.includes(";") ? ";" : ",";
-          const cols = row.split(delimiter).map(c => c.replace(/^["']|["']$/g, "").trim());
-
-          if (cols.length < 3 || !cols[0]) {
-            continue; // Skip invalid row
-          }
-
-          const name = cols[0];
-          const genderInput = cols[1]?.toUpperCase() || "L";
-          const gender: "L" | "P" = (genderInput.startsWith("P") || genderInput === "PEREMPUAN") ? "P" : "L";
-          const grade = cols[2] || "IV-A";
-          const height = parseFloat(cols[3]) || 135;
-          const weight = parseFloat(cols[4]) || 30;
-          const runSpeed = parseFloat(cols[5]) || 0;
-          const sitUps = parseInt(cols[6], 10) || 0;
-          const pushUps = parseInt(cols[7], 10) || 0;
-          const verticalJump = parseFloat(cols[8]) || 0;
-          const runDistance = parseFloat(cols[9]) || 0;
-
-          parsed.push({
-            id: `std-bulk-${Date.now()}-${i}`,
-            name,
-            gender,
-            grade,
-            height,
-            weight,
-            runSpeed,
-            sitUps,
-            pushUps,
-            verticalJump,
-            runDistance,
-            updatedAt: new Date().toISOString().split("T")[0]
+        if (isExcelBinary) {
+          const data = new Uint8Array(event.target?.result as ArrayBuffer);
+          const workbook = XLSX.read(data, { type: "array" });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" }) as any[][];
+        } else {
+          const text = String(event.target?.result || "");
+          const lines = text
+            .split(/\r?\n/)
+            .map((l) => l.trim())
+            .filter((l) => l.length > 0);
+          rows = lines.map((line) => {
+            const delimiter = line.includes("\t") ? "\t" : line.includes(";") ? ";" : ",";
+            return line.split(delimiter);
           });
         }
 
+        const parsed = parseRowsToStudents(rows, "std-bulk");
+
         if (parsed.length === 0) {
-          setImportError("Tidak berhasil mendeteksi data siswa yang valid. Mohon periksa kembali file Anda.");
+          setImportError(
+            "Tidak berhasil mendeteksi baris data siswa yang valid. Pastikan kolom Nama Lengkap Siswa, Jenis Kelamin (L/P), dan Kelas telah terisi."
+          );
         } else {
           setImportPreview(parsed);
+          setImportSuccess(
+            `Berhasil membaca ${parsed.length} data siswa per kolom dari file "${file.name}". Klik tombol Simpan di bawah untuk menerapkan!`
+          );
         }
-      } catch (err) {
-        setImportError("Format file tidak didukung atau rusak. Silakan gunakan template CSV.");
+      } catch {
+        setImportError("Format file tidak didukung atau rusak. Silakan gunakan Template Excel (.xlsx) resmi.");
       }
     };
-    reader.readAsText(file);
+
+    if (isExcelBinary) {
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.readAsText(file);
+    }
   };
 
   // Save imported bulk students
@@ -3196,67 +3285,25 @@ export default function SadarDashboard() {
     setImportSuccess(null);
     
     if (!pastedText.trim()) {
-      setImportError("Kotak teks kosong. Silakan tempel data dari Excel terlebih dahulu.");
+      setImportError("Kotak teks kosong. Silakan tempel data per kolom dari Excel terlebih dahulu.");
       return;
     }
 
     try {
       const lines = pastedText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-      const parsed: Student[] = [];
+      const rows = lines.map((row) => {
+        if (row.includes("\t")) return row.split("\t");
+        if (row.includes(";")) return row.split(";");
+        return row.split(",");
+      });
 
-      for (let i = 0; i < lines.length; i++) {
-        const row = lines[i];
-        let cols: string[] = [];
-        if (row.includes("\t")) {
-          cols = row.split("\t").map(c => c.trim());
-        } else if (row.includes(";")) {
-          cols = row.split(";").map(c => c.replace(/^["']|["']$/g, "").trim());
-        } else {
-          cols = row.split(",").map(c => c.replace(/^["']|["']$/g, "").trim());
-        }
-
-        if (cols.length < 3 || !cols[0]) {
-          continue; // skip invalid or empty lines
-        }
-
-        // Check if the first line is a header by matching keywords
-        if (i === 0 && (cols[0].toLowerCase().includes("nama") || cols[1].toLowerCase().includes("kelamin") || cols[2].toLowerCase().includes("kelas"))) {
-          continue; // Skip header row
-        }
-
-        const name = cols[0];
-        const genderInput = cols[1]?.toUpperCase() || "L";
-        const gender: "L" | "P" = (genderInput.startsWith("P") || genderInput === "PEREMPUAN") ? "P" : "L";
-        const grade = cols[2] || "IV-A";
-        const height = parseFloat(cols[3]) || 135;
-        const weight = parseFloat(cols[4]) || 30;
-        const runSpeed = parseFloat(cols[5]) || 0;
-        const sitUps = parseInt(cols[6], 10) || 0;
-        const pushUps = parseInt(cols[7], 10) || 0;
-        const verticalJump = parseFloat(cols[8]) || 0;
-        const runDistance = parseFloat(cols[9]) || 0;
-
-        parsed.push({
-          id: `std-paste-${Date.now()}-${i}`,
-          name,
-          gender,
-          grade,
-          height,
-          weight,
-          runSpeed,
-          sitUps,
-          pushUps,
-          verticalJump,
-          runDistance,
-          updatedAt: new Date().toISOString().split("T")[0]
-        });
-      }
+      const parsed = parseRowsToStudents(rows, "std-paste");
 
       if (parsed.length === 0) {
-        setImportError("Tidak berhasil mendeteksi data siswa yang valid. Pastikan Anda menyalin minimal 3 kolom: Nama, Jenis Kelamin (L/P), dan Kelas.");
+        setImportError("Tidak berhasil mendeteksi data siswa yang valid. Pastikan Anda menyalin kolom: Nama Lengkap, Jenis Kelamin (L/P), dan Kelas.");
       } else {
         setImportPreview(parsed);
-        setImportSuccess(`Berhasil memproses ${parsed.length} data siswa dari teks salinan! Silakan periksa tabel pratinjau di bawah lalu klik simpan.`);
+        setImportSuccess(`Berhasil memproses ${parsed.length} data siswa per kolom dari salinan Excel! Silakan periksa tabel pratinjau di bawah lalu klik simpan.`);
       }
     } catch (err) {
       setImportError("Gagal memproses data salinan. Mohon periksa format data Anda.");
@@ -8887,11 +8934,11 @@ export default function SadarDashboard() {
                   <div className="flex flex-wrap gap-3 w-full md:w-auto">
                     <button
                       onClick={handleDownloadTemplate}
-                      className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer border border-slate-200"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all cursor-pointer shadow-sm"
                       id="download-template-top-btn"
                     >
-                      <FileDown className="h-4 w-4 text-emerald-600" />
-                      Unduh Template Excel (.CSV)
+                      <FileSpreadsheet className="h-4 w-4 text-white" />
+                      Unduh Template Excel Per Kolom (.xlsx)
                     </button>
                   </div>
                 </div>
@@ -9347,16 +9394,16 @@ export default function SadarDashboard() {
                               {/* Download section integration */}
                               <div className="bg-emerald-50/50 border border-emerald-100/60 p-4 rounded-xl flex items-start gap-3" id="template-hint-box">
                                 <Info className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
-                                <div className="space-y-1 flex-1">
-                                  <h5 className="text-xs font-bold text-emerald-900">Belum memiliki template Excel?</h5>
+                                <div className="space-y-1.5 flex-1">
+                                  <h5 className="text-xs font-bold text-emerald-900">Template Excel Resmi Rapi Per Kolom (.xlsx)</h5>
                                   <p className="text-[11px] text-emerald-700 leading-relaxed font-medium">
-                                    Unduh template standar kami terlebih dahulu, isi data siswa di Excel, simpan dengan format <strong>CSV (Pemisah Titik Koma / Semicolon)</strong>, lalu unggah kembali di bawah ini.
+                                    Unduh file <strong>Template_Input_Siswa_Per_Kolom_PJOK.xlsx</strong> yang sudah terpisah rapi per kolom: <strong>Kolom A (No)</strong>, <strong>Kolom B (Nama Lengkap Siswa)</strong>, <strong>Kolom C (Jenis Kelamin L/P)</strong>, <strong>Kolom D (Kelas/Rombel)</strong>, beserta kolom opsional TB, BB, dan TKJI. Isi datanya di Excel lalu unggah langsung file <strong>.xlsx</strong> tersebut di bawah ini.
                                   </p>
                                   <button
                                     onClick={handleDownloadTemplate}
                                     className="text-xs font-extrabold text-emerald-700 hover:text-emerald-800 underline mt-1.5 block cursor-pointer text-left font-sans"
                                   >
-                                    Unduh Template .CSV Sekarang →
+                                    Unduh Template Excel Per Kolom (.xlsx) Sekarang →
                                   </button>
                                 </div>
                               </div>
@@ -9368,21 +9415,21 @@ export default function SadarDashboard() {
                               >
                                 <input
                                   type="file"
-                                  accept=".csv, .txt"
+                                  accept=".xlsx, .xls, .csv, .txt"
                                   onChange={handleFileUpload}
                                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                   id="bulk-file-input"
                                 />
                                 <div className="space-y-3 pointer-events-none">
                                   <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-emerald-600 group-hover:scale-110 transition-transform">
-                                    <FileText className="h-6 w-6" />
+                                    <FileSpreadsheet className="h-6 w-6" />
                                   </div>
                                   <div>
                                     <p className="text-xs font-bold text-slate-700">
-                                      {importFile ? `File Terpilih: ${importFile?.name}` : "Pilih File Excel / CSV Hasil Edit Anda"}
+                                      {importFile ? `File Terpilih: ${importFile?.name}` : "Pilih File Excel (.xlsx / .xls) atau CSV Hasil Edit Anda"}
                                     </p>
                                     <p className="text-[10px] text-slate-400 font-medium mt-1">
-                                      Drag & drop file di sini, atau klik untuk menjelajah komputer Anda
+                                      Mendukung unggah langsung file Excel (.xlsx) per kolom maupun .csv
                                     </p>
                                   </div>
                                 </div>
@@ -9394,10 +9441,10 @@ export default function SadarDashboard() {
                               <div className="bg-emerald-50/50 border border-emerald-100/60 p-4 rounded-xl flex items-start gap-3" id="paste-hint-box">
                                 <Info className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
                                 <div className="space-y-1 flex-1">
-                                  <h5 className="text-xs font-bold text-emerald-900">Cara Copy-Paste dari Excel / Google Sheets:</h5>
+                                  <h5 className="text-xs font-bold text-emerald-900">Cara Copy-Paste Per Kolom dari Excel / Google Sheets:</h5>
                                   <p className="text-[11px] text-emerald-700 leading-relaxed font-medium">
                                     1. Buka file data siswa Anda di Microsoft Excel atau Google Sheets.<br />
-                                    2. Blok kolom data: <strong>Nama</strong>, <strong>Jenis Kelamin (L/P)</strong>, dan <strong>Kelas</strong>.<br />
+                                    2. Blok kolom data per kolom: <strong>No (opsional)</strong>, <strong>Nama Lengkap</strong>, <strong>Jenis Kelamin (L/P)</strong>, dan <strong>Kelas</strong>.<br />
                                     3. Tekan <strong>Ctrl+C</strong>, klik kotak teks di bawah, lalu tekan <strong>Ctrl+V</strong>.<br />
                                     4. Klik tombol proses untuk memvalidasi dan mempratinjau data.
                                   </p>
@@ -9405,7 +9452,7 @@ export default function SadarDashboard() {
                                     onClick={handleDownloadTemplate}
                                     className="text-xs font-extrabold text-emerald-700 hover:text-emerald-800 underline mt-1.5 block cursor-pointer text-left font-sans animate-pulse"
                                   >
-                                    Unduh Template Acuan .CSV →
+                                    Unduh Template Acuan Excel Per Kolom (.xlsx) →
                                   </button>
                                 </div>
                               </div>
@@ -12173,13 +12220,19 @@ export default function SadarDashboard() {
                                 PUSH: Unggah ke Cloud
                               </h6>
                               <p className="text-[10px] text-slate-400 leading-normal font-semibold">
-                                Mengunggah seluruh data yang ada di browser Anda saat ini ke database cloud Supabase Absensi2027.
+                                Mengunggah seluruh data yang ada di browser Anda saat ini ke database cloud Supabase Absensi2027 (memerlukan persetujuan Ya/Tidak).
                               </p>
                             </div>
                             <button
-                              onClick={handlePushToSupabase}
+                              type="button"
+                              onClick={() => {
+                                setSyncError(null);
+                                setSyncSuccess(null);
+                                setPendingCloudAction("push");
+                              }}
                               disabled={isSyncing}
                               className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-200 disabled:text-slate-400 disabled:border-transparent text-white font-extrabold rounded-xl text-xs border border-emerald-500 shadow-md shadow-emerald-950/10 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                              id="btn-open-push-confirm"
                             >
                               {isSyncing ? (
                                 <>
@@ -12203,13 +12256,19 @@ export default function SadarDashboard() {
                                 PULL: Ambil dari Cloud
                               </h6>
                               <p className="text-[10px] text-slate-400 leading-normal font-semibold">
-                                Mengunduh data terbaru dari database cloud Supabase Absensi2027 dan menerapkannya ke perangkat ini.
+                                Mengunduh data terbaru dari database cloud Supabase Absensi2027 dan menerapkannya ke perangkat ini (memerlukan persetujuan Ya/Tidak).
                               </p>
                             </div>
                             <button
-                              onClick={handlePullFromSupabase}
+                              type="button"
+                              onClick={() => {
+                                setSyncError(null);
+                                setSyncSuccess(null);
+                                setPendingCloudAction("pull");
+                              }}
                               disabled={isFetchingDb}
                               className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-200 disabled:text-slate-400 disabled:border-transparent text-white font-extrabold rounded-xl text-xs border border-emerald-500 shadow-md shadow-emerald-950/10 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                              id="btn-open-pull-confirm"
                             >
                               {isFetchingDb ? (
                                 <>
@@ -12225,6 +12284,104 @@ export default function SadarDashboard() {
                             </button>
                           </div>
                         </div>
+
+                        {/* KOTAK & MODAL KONFIRMASI PERSETUJUAN YA / TIDAK SEBELUM KIRIM / AMBIL DATA CLOUD */}
+                        {pendingCloudAction && (
+                          <div
+                            className="p-5 rounded-2xl bg-slate-900 text-white border-2 border-emerald-500 shadow-xl space-y-4 animate-fade-in"
+                            id="cloud-confirm-approval-box"
+                          >
+                            <div className="flex items-start gap-3.5">
+                              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shrink-0 mt-0.5">
+                                <AlertTriangle className="w-5 h-5" />
+                              </div>
+                              <div className="space-y-1 flex-1">
+                                <span className="inline-block px-2.5 py-0.5 rounded bg-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-wider">
+                                  Konfirmasi Persetujuan Pengguna
+                                </span>
+                                <h5 className="text-sm sm:text-base font-black text-white">
+                                  {pendingCloudAction === "push"
+                                    ? "Apakah Anda yakin ingin MENGIRIM (PUSH) seluruh data ke Cloud Supabase?"
+                                    : "Apakah Anda yakin ingin MENGAMBIL (PULL) data dari Cloud Supabase?"}
+                                </h5>
+                                <p className="text-xs text-slate-300 leading-relaxed">
+                                  {pendingCloudAction === "push" ? (
+                                    <>
+                                      Data lokal Anda saat ini akan dikirim dan memperbarui tabel{" "}
+                                      <code className="text-emerald-300 font-mono font-bold">
+                                        public.sadar_app_data
+                                      </code>{" "}
+                                      pada proyek Supabase{" "}
+                                      <strong className="text-white">
+                                        {dbProjectInfo.projectName || "Absensi2027"}
+                                      </strong>
+                                      :
+                                    </>
+                                  ) : (
+                                    <>
+                                      Data dari server Cloud Supabase{" "}
+                                      <strong className="text-white">
+                                        {dbProjectInfo.projectName || "Absensi2027"}
+                                      </strong>{" "}
+                                      akan diunduh dan diterapkan ke aplikasi pada perangkat ini:
+                                    </>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Ringkasan Data yang Akan Dikirim */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-950/90 p-3 rounded-xl border border-slate-800 text-[11px]">
+                              <div>
+                                <span className="text-slate-400 block">Data Siswa:</span>
+                                <strong className="text-emerald-400">{students.length} Siswa ({customRombels.length} Rombel)</strong>
+                              </div>
+                              <div>
+                                <span className="text-slate-400 block">Log Absensi:</span>
+                                <strong className="text-emerald-400">{attendanceRecords.length} Sesi</strong>
+                              </div>
+                              <div>
+                                <span className="text-slate-400 block">Rekap Nilai:</span>
+                                <strong className="text-emerald-400">{Object.keys(studentGrades).length} Siswa</strong>
+                              </div>
+                              <div>
+                                <span className="text-slate-400 block">Modul &amp; Sarpras:</span>
+                                <strong className="text-emerald-400">{savedPlans.length} RPP / {inventory.length} Alat</strong>
+                              </div>
+                            </div>
+
+                            {/* Tombol Pilihan YA atau TIDAK */}
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-1">
+                              <button
+                                type="button"
+                                onClick={() => setPendingCloudAction(null)}
+                                className="px-5 py-2.5 rounded-xl bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-200 font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                                id="btn-cloud-confirm-no"
+                              >
+                                ✕ TIDAK, BATALKAN
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const action = pendingCloudAction;
+                                  setPendingCloudAction(null);
+                                  if (action === "push") {
+                                    handlePushToSupabase();
+                                  } else {
+                                    handlePullFromSupabase();
+                                  }
+                                }}
+                                className="px-6 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/20 transition-all cursor-pointer flex items-center justify-center gap-2"
+                                id="btn-cloud-confirm-yes"
+                              >
+                                <CheckCircle2 className="w-4 h-4" />
+                                {pendingCloudAction === "push"
+                                  ? "YA, SETUJU & KIRIM DATA KE CLOUD"
+                                  : "YA, SETUJU & AMBIL DATA DARI CLOUD"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Real-time sync details list */}
