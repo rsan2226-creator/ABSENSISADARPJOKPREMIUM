@@ -1,0 +1,6 @@
+{
+  "name": "SADAR - Administrasi PJOK SD",
+  "description": "Sistem Administrasi Premium Pendidikan Jasmani, Olahraga, dan Kesehatan untuk Sekolah Dasar.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
